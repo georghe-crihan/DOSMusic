@@ -1,10 +1,12 @@
+; Original HOLMS virus sound effect as extracted from the AVP Virus Encyclopedia
+; (AVPVE) demos.
                 .8086
                 .model tiny
 
 seg000          segment byte public 'CODE'
                 assume cs:seg000
                 org 100h
-                assume es:nothing, ss:nothing, ds:seg000
+                assume ds:seg000
 
                 public start
 start           proc near
