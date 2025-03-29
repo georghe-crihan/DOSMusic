@@ -1,3 +1,4 @@
+' Lambada by Kaoma, 1989.
 play("t130 mf ml l4 p2 o2 e. l8 d c o1 b mn a4")
 play("o2 mf mn d d d ml c o1 mn f4 f ml g")
 play("t120 ms o1a8 a8 a8 o0 g1.")
