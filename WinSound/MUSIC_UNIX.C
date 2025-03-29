@@ -188,10 +188,10 @@ void wave_write(int a, int b)
 
 int sin_table[WAVE_QUALITY+1];
 
-int main()
+int main(int argc, char **argv)
 {
   // pre-calculated sinus table needed to generate wave faster
-  printf("initializing sintable...\n");
+  if (argc > 1) printf("initializing sintable...\n");
   for (int i=0; i<WAVE_QUALITY; i++)
     sin_table[i] = sin( (float)i*M_PI*2/WAVE_QUALITY ) * WAVE_AMP;
 
@@ -199,15 +199,15 @@ int main()
   int totaltime=0; // [ms]
   for (int i=0; i<music_notes; i++)
     totaltime += music_delay[i];
-  printf("total music time = %i ms\n", totaltime);
+  if (argc > 1) printf("total music time = %i ms\n", totaltime);
 
   if (totaltime>WAVE_MAXSEC*1000)
   {
-    printf("***ERROR***: music size too large (or WAVE_MAXSEC too small)\n");
+    fprintf(stderr, "***ERROR***: music size too large (or WAVE_MAXSEC too small)\n");
     exit(0);
   }
 
-  printf("generating waveform...\n");
+  if (argc > 1) printf("generating waveform...\n");
   wave_init();
   for (int note=0; note<music_notes; note++)
   {
@@ -226,9 +226,15 @@ int main()
     }
   }
 
-  FILE*f=fopen("test.wav","wb");
+  FILE *f = stdout;
+
+  if (argc > 1)
+      f=fopen(argv[1],"wb");
+
   fwrite(wave,1,58+wave->data_size,f);
-  fclose(f);
+
+  if (argc > 1)
+      fclose(f);
 
   return 0;
 }
