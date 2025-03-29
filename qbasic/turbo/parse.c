@@ -1,3 +1,8 @@
+/* Turbo Basic Owner's Handbook documents passing String Descriptors to INLINE
+ * procedures (aka Assembly code), as well as RUNTIME's and user's memory map
+ * (in particular the Scalar Segment and String Segment) from where the data is
+ * read. 
+ */
 #include <stdio.h>
 #include <stdlib.h>
 
