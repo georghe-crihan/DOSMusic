@@ -1,5 +1,11 @@
-void timer_rtn()
-{
+#include <stdio.h>
+#include <dos.h>
+
+volatile int clock_ticks;
+void (__interrupt __far *prev_int_1c)();
+
+void __interrupt __far timer_rtn()
+  {
   unsigned __int8 v0; // al
   unsigned __int16 v1; // bx
   unsigned __int8 v2; // al
@@ -50,6 +56,15 @@ void timer_rtn()
       idx1 = v4;
     }
   }
-  __asm { iretw }
+    _chain_intr( prev_int_1c );
 }
 
+
+void main()
+  {
+    prev_int_1c = _dos_getvect( 0x1c );
+    _dos_setvect( 0x1c, timer_rtn );
+
+    /* Wait for key press */
+    _dos_setvect( 0x1c, prev_int_1c );
+  }
