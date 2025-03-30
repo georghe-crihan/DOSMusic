@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <dos.h>
+#include <conio.h> /* getch() */
 
+typedef char int8_t;
 typedef unsigned char u_int8_t;
 typedef unsigned short u_int16_t;
 typedef short int16_t;
 
-volatile u_int8_t flag1; 
-volatile u_int8_t flag2;
+volatile int8_t flag1; 
+volatile int8_t flag2;
 volatile u_int16_t cnt1;
 volatile u_int16_t cnt1_max;
 
@@ -14,11 +16,11 @@ void (__interrupt __far *prev_int_1c)();
 
 void __interrupt __far timer_rtn()
   {
-  u_int8_t v0; // al
-  u_int16_t v1; // bx
-  u_int8_t v2; // al
-  u_int8_t v3; // al
-  int16_t v4; // bx
+  u_int8_t v0; /* al */
+  u_int16_t v1; /* bx */
+  u_int8_t v2; /* al */
+  u_int8_t v3; /* al */
+  int16_t v4; /* bx */
   u_int16_t vt;
 
   _disable();
@@ -41,9 +43,9 @@ void __interrupt __far timer_rtn()
     else
     {
       vt = tbl1[idx1];
-      //v1 = *MK_FP(2, (_WORD)tbl1 + idx1) >> 5;
+      /* v1 = *MK_FP(2, (_WORD)tbl1 + idx1) >> 5; */
       v1 = vt >> 5;
-      //cnt1_max = (*MK_FP(2, (_WORD)tbl1 + idx1) & 0x3F) - 1;
+      /* cnt1_max = (*MK_FP(2, (_WORD)tbl1 + idx1) & 0x3F) - 1; */
       cnt1_max = (vt & 0x3F) - 1;
       if ( v1 <= 0x12u )
       {
@@ -75,5 +77,6 @@ void main()
     _dos_setvect( 0x1c, timer_rtn );
 
     /* Wait for key press */
+    getch();
     _dos_setvect( 0x1c, prev_int_1c );
   }

@@ -1,3 +1,5 @@
+from struct import pack
+
 def write_var_len(v: int) -> str:
     # a: str
     a=chr(v and 127)
@@ -8,15 +10,7 @@ def write_var_len(v: int) -> str:
     return a
 
 def write_four_bytes(v: int) -> str:
-    # a: str
-    a=chr(v and 255)
-    v >>= 8
-    a=chr(v and 255)+a
-    v >>= 8
-    a=chr(v and 255)+a
-    v >>= 8
-    a=chr(v and 255)+a
-    return a
+    return pack('<I', v)
 
 xlatNote = { # (n: str) -> ubyte:
     "c": 0,
@@ -88,7 +82,7 @@ def _fbplay_internal(channel: ubyte, playstr: str) -> str:
 				else: # note
 					duration=60/tempo*(4/note_len)
 
-					Track=Track+write_var_len(240*next_event)+chr(&H90 + channel)+chr(idx)+chr(volume)
+					Track=Track+write_var_len(240*next_event)+chr(0x90 + channel)+chr(idx)+chr(volume)
 
 					next_event=duration*(1-note_len_mod)
 					#stop_note(channel)=t+duration*note_len_mod(channel)
@@ -124,7 +118,7 @@ def _fbplay_internal(channel: ubyte, playstr: str) -> str:
 
 				idx=12*octave+xlatNote[toTranslate]
 
-				Track=Track+write_var_len(240*next_event)+chr(&H90 + channel)+chr(idx)+chr(volume)
+				Track=Track+write_var_len(240*next_event)+chr(0x90 + channel)+chr(idx)+chr(volume)
 
 				next_event=duration*(1-note_len_mod)
 
@@ -204,7 +198,7 @@ def _fbplay_internal(channel: ubyte, playstr: str) -> str:
 						number+=ch
 					else:
 						break
-				Track=Track+write_var_len(0)+chr(&HC0 + channel)+chr(int(number))
+				Track=Track+write_var_len(0)+chr(0xc0 + channel)+chr(int(number))
 		     
 			elif ch == "v":
 				number=""
@@ -227,7 +221,7 @@ def _fbplay_internal(channel: ubyte, playstr: str) -> str:
 		else:
 			# Stop current note, if still playing
 			for i in range(1, note_stack[0]):
-				Track=Track+write_var_len(240*duration*note_len_mod)+chr(&H80 + channel)+chr(note_stack[i])+chr(0)
+				Track=Track+write_var_len(240*duration*note_len_mod)+chr(0x80 + channel)+chr(note_stack[i])+chr(0)
 				duration=0
 			note_stack[0]=0
 
@@ -312,7 +306,7 @@ def play(playstr: str, playstr1: str="", playstr2: str="", playstr3: str="",
 		Tracks+=1
 
 	with open("output.mid", "wa") as output: 
-	    output.write("MThd"+chr(0)+chr(0)+chr(0)+chr(6)+chr(0)+chr(iif(Tracks>1,1,0))+chr(0)+chr(Tracks)+chr(0)+chr(120)+Midi)
+	    output.write("MThd"+chr(0)+chr(0)+chr(0)+chr(6)+chr(0)+chr(1 if Tracks > 1 else 0))+chr(0)+chr(Tracks)+chr(0)+chr(120)+Midi)
 
 
 play(" i48 t200l4mneel2el4eel2el4egl3cl8dl1el4ffl3fl8fl4fel2el8eel4eddel2dgl4eel2el4eel2el4egl3cl8dl1el4ffl3fl8fl4fel2el8efl4ggfdl2cl8")
