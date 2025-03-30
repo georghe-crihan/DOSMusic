@@ -9,12 +9,12 @@ typedef short int16_t;
 
 volatile int8_t flag1 = 0; 
 volatile int8_t flag2 = -1;
-volatile u_int8_t cnt1 = 0;
-volatile u_int8_t cnt1_max = 0;
-volatile u_int16_t idx1 = 0;
-volatile u_int16_t idx1_max = 0xDA;
+volatile u_int8_t tick = 0;
+volatile u_int8_t total_ticks = 0;
+volatile u_int16_t idx = 0;
+volatile u_int16_t idx_max = 0xDA;
 
-static u_int16_t tbl1[] = {
+static u_int16_t tbl[] = {
     0x2BCA, 5, 2, 0x2BC2, 0x3705, 5, 0x4185, 5, 0x5782, 0x5282,
     0x4902, 0x5282, 0x578A, 5, 0x5285, 5, 0x4902, 2, 0x4182, 0x3A42,
     0x3702, 0x3A42, 0x418A, 5, 0x3A45, 5, 0x3702, 2, 0x370A, 0x20C5,
@@ -52,17 +52,17 @@ void __interrupt __far timer_rtn()
   }
   if ( flag2 != -1 )
   {
-    if ( cnt1 < cnt1_max )
+    if ( tick < total_ticks )
     {
-      ++cnt1;
+      ++tick;
     }
     else
     {
-      vt = tbl1[idx1];
-      /* v1 = *MK_FP(2, (_WORD)tbl1 + idx1) >> 5; */
+      vt = tbl[idx];
+      /* v1 = *MK_FP(2, (_WORD)tbl + idx) >> 5; */
       v1 = vt >> 5;
-      /* cnt1_max = (*MK_FP(2, (_WORD)tbl1 + idx1) & 0x3F) - 1; */
-      cnt1_max = (vt & 0x3F) - 1;
+      /* total_ticks = (*MK_FP(2, (_WORD)tbl + idx) & 0x3F) - 1; */
+      total_ticks = (vt & 0x3F) - 1;
       if ( v1 <= 0x12u )
       {
         v3 = inp(0x61u);
@@ -76,11 +76,11 @@ void __interrupt __far timer_rtn()
         v2 = inp(0x61u);
         outp(0x61u, v2 | 3);
       }
-      cnt1 = 0;
-      v4 = idx1 + 2;
-      if ( (int16_t)(idx1 + 2) > idx1_max)
+      tick = 0;
+      v4 = idx + 2;
+      if ( (int16_t)(idx + 2) > idx_max)
         v4 = 0;
-      idx1 = v4;
+      idx = v4;
     }
   }
     _chain_intr( prev_int_1c );
