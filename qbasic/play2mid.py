@@ -29,41 +29,41 @@ xlatNote = { # (n: str) -> ubyte:
 
 
 def _fbplay_internal(channel: ubyte, playstr: str) -> str:
-    '''
+    """
 	default tempo is 120 quarter notes per minute
 	default note is a quarter note
 	as default notes play their full length
 	default octave is the 4th
 	default instrument is acoustic grand piano |TODO: Find a instrument closer to QB's PLAY sound.
 	maximum volume is default
-	'''
+	"""
 
-	# Track: str
+    # Track: str
 
 	tempo: uint = 120
-	note_len: ubyte = 4
-	note_len_mod:  double = 1
-	octave: ubyte = 4
-	volume:  ubyte = 127
-	note_stack[128]: ubyte
+    note_len: ubyte = 4
+    note_len_mod:  double = 1
+    octave: ubyte = 4
+    volume:  ubyte = 127
+    note_stack[128]: ubyte
 
-	#chord: ubyte
-	#next_event: double
+    #chord: ubyte
+    #next_event: double
 
-	#duration: double
-	#idx: ubyte
+    #duration: double
+    #idx: ubyte
        
-	#number: str
-	#ch:  char
+    #number: str
+    #ch:  char
 	#tChar: char
        
 	#toTranslate: str
 
 	p = 1 #: int
        
-	while p < len(playstr):
-		ch=playstr[p].lower()
-		p+=1
+    while p < len(playstr):
+        ch=playstr[p].lower()
+        p+=1
 
 		# basic playing
 			if ch == "n":      # plays note with next-comming number, if 0 then pause
@@ -113,7 +113,7 @@ def _fbplay_internal(channel: ubyte, playstr: str) -> str:
 						number+=ch
 					else:
 						break
-				if int(number)<>0: duration=duration*4/int(number)
+				if int(number)!=0: duration=duration*4/int(number)
 				if ch==".": duration=duration*1.5
 
 				idx=12*octave+xlatNote[toTranslate]
@@ -145,7 +145,7 @@ def _fbplay_internal(channel: ubyte, playstr: str) -> str:
 			elif ch == "<":      # down one octave
 				if octave>1: octave-=1
 		         
-			elif ch == "o"      # changes octave to next-comming number
+			elif ch == "o":      # changes octave to next-comming number
 				number=""
 				while True:
 					ch=playstr[p]
@@ -166,7 +166,7 @@ def _fbplay_internal(channel: ubyte, playstr: str) -> str:
 						p+=1
 						number+=ch
 					else:
-				            break	
+						break
 				tempo=int(number)
 
 			elif ch == "l":      # changes note length (1=full note, 4=quarter note, 8 eigth(?) note aso)
