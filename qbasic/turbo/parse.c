@@ -1,7 +1,8 @@
 /* Turbo Basic Owner's Handbook documents passing String Descriptors to INLINE
  * procedures (aka Assembly code), as well as RUNTIME's and user's memory map
  * (in particular the Scalar Segment and String Segment) from where the data is
- * read. 
+ * read.
+ * BUG: Does not output the last string.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,7 +34,7 @@ for (strdescr *p = dp; p < dp + descr_end-descr; ++p) {
     u_int16_t l = (p->len) & ~0x8000;
     fread(s, 1, l, infile);
     s[l] = '\0';
-    printf("Length: %d, string: %s\n", l, s); 
+    printf("Length: %d, offset: %X (%X), string: %s\n", l, p->off, (unsigned int)((p-dp) * sizeof(strdescr)), s); 
 }
 free(dp);
 free(s);
