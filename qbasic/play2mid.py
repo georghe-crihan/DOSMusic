@@ -211,7 +211,6 @@ def _fbplay_internal(channel: int, playstr: str) -> bytes:
                 track = (track + write_var_len(0) +
                          bytes([0xc0 + channel, int(number)]))
 
-
             elif ch == "v":
                 number = ""
                 while True:
@@ -266,77 +265,77 @@ def play(playstr: str, playstr1: str = "", playstr2: str = "",
     track = _fbplay_internal(1, playstr1)
     if len(track) > 0:
         midi = (midi + b"MTrk" + write_four_bytes(len(track) + 4) +
-                track + chr(0) + chr(255) + chr(47) + chr(0))
+                track + bytes([0, 255, 47, 0]))
         tracks += 1
     track = _fbplay_internal(2, playstr2)
     if len(track) > 0:
         midi = (midi + b"MTrk" + write_four_bytes(len(track) + 4) +
-                track + chr(0) + chr(255) + chr(47) + chr(0))
+                track + bytes([0, 255, 47, 0]))
         tracks += 1
     track = _fbplay_internal(3, playstr3)
     if len(track) > 0:
         midi = (midi + b"MTrk" + write_four_bytes(len(track) + 4) +
-                track + chr(0) + chr(255) + chr(47) + chr(0))
+                track + bytes([0, 255, 47, 0]))
         tracks += 1
     track = _fbplay_internal(4, playstr4)
     if len(track) > 0:
         midi = (midi + b"MTrk" + write_four_bytes(len(track) + 4) +
-                track + chr(0) + chr(255) + chr(47) + chr(0))
+                track + bytes([0, 255, 47, 0]))
         tracks += 1
     track = _fbplay_internal(5, playstr5)
     if len(track) > 0:
         midi = (midi + b"MTrk" + write_four_bytes(len(track) + 4) +
-                track + chr(0) + chr(255) + chr(47) + chr(0))
+                track + bytes([0, 255, 47, 0]))
         tracks += 1
     track = _fbplay_internal(6, playstr6)
     if len(track) > 0:
         midi = (midi + b"MTrk" + write_four_bytes(len(track) + 4) +
-                track + chr(0) + chr(255) + chr(47) + chr(0))
+                track + bytes([0, 255, 47, 0]))
         tracks += 1
     track = _fbplay_internal(7, playstr7)
     if len(track) > 0:
         midi = (midi + b"MTrk" + write_four_bytes(len(track) + 4) +
-                track + chr(0) + chr(255) + chr(47) + chr(0))
+                track + bytes([0, 255, 47, 0]))
         tracks += 1
     track = _fbplay_internal(8, playstr8)
     if len(track) > 0:
         midi = (midi + b"MTrk" + write_four_bytes(len(track) + 4) +
-                track + chr(0) + chr(255) + chr(47) + chr(0))
+                track + bytes([0, 255, 47, 0]))
         tracks += 1
     track = _fbplay_internal(9, playstr9)
     if len(track) > 0:
         midi = (midi + b"MTrk" + write_four_bytes(len(track) + 4) +
-                track + chr(0) + chr(255) + chr(47) + chr(0))
+                track + bytes([0, 255, 47, 0]))
         tracks += 1
     track = _fbplay_internal(10, playstr10)
     if len(track) > 0:
         midi = (midi + b"MTrk" + write_four_bytes(len(track) + 4) +
-                track + chr(0) + chr(255) + chr(47) + chr(0))
+                track + bytes([0, 255, 47, 0]))
         tracks += 1
     track = _fbplay_internal(11, playstr11)
     if len(track) > 0:
         midi = (midi + b"MTrk" + write_four_bytes(len(track) + 4) +
-                track + chr(0) + chr(255) + chr(47) + chr(0))
+                track + bytes([0, 255, 47, 0]))
         tracks += 1
     track = _fbplay_internal(12, playstr12)
     if len(track) > 0:
         midi = (midi + b"MTrk" + write_four_bytes(len(track) + 4) +
-                track + chr(0) + chr(255) + chr(47) + chr(0))
+                track + bytes([0, 255, 47, 0]))
         tracks += 1
     track = _fbplay_internal(13, playstr13)
     if len(track) > 0:
         midi = (midi + b"MTrk" + write_four_bytes(len(track) + 4) +
-                track + chr(0) + chr(255) + chr(47) + chr(0))
+                track + bytes([0, 255, 47, 0]))
         tracks += 1
     track = _fbplay_internal(14, playstr14)
     if len(track) > 0:
         midi = (midi + b"MTrk" + write_four_bytes(len(track) + 4) +
-                track + chr(0) + chr(255) + chr(47) + chr(0))
+                track + bytes([0, 255, 47, 0]))
         tracks += 1
     track = _fbplay_internal(15, playstr15)
     if len(track) > 0:
         midi = (midi + b"MTrk" + write_four_bytes(len(track) + 4) +
-                track + chr(0) + chr(255) + chr(47) + chr(0))
+                track + bytes([0, 255, 47, 0]))
         tracks += 1
 
     with open("output.mid", "ab") as output:
