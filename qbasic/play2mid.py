@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from struct import pack
 
 
@@ -24,7 +25,7 @@ xlatNote = {  # (n: str) -> ubyte:
     "f": 5, "es": 5,
     "fs": 6, "gb": 6,
     "g": 7,
-    "gs": 8, "ab" 8,
+    "gs": 8, "ab": 8,
     "a": 9,
     "as": 10, "bb": 10,
     "b": 11, "cb": 11
@@ -44,16 +45,16 @@ def _fbplay_internal(channel: int, playstr: str) -> str:
     maximum volume is default
     """
 
-    # Track: str
+    Track = ""  # : str
 
     tempo = 120  # uint
     note_len = 4  # ubyte
     note_len_mod = 1  # double
     octave = 4  # ubyte
     volume = 127  # ubyte
-    note_stack = []  # [128] ubyte
+    note_stack = []  # : ubyte
 
-    # chord: ubyte
+    chord = 0  # : ubyte
     # next_event: double
 
     # duration: double
@@ -65,7 +66,7 @@ def _fbplay_internal(channel: int, playstr: str) -> str:
 
     # toTranslate: str
 
-    p = 1  #: int
+    p = 0  #: int
 
     while p < len(playstr):
         ch = playstr[p].lower()
@@ -94,25 +95,24 @@ def _fbplay_internal(channel: int, playstr: str) -> str:
             next_event = duration*(1-note_len_mod)
             # stop_note(channel) = t+duration*note_len_mod(channel)
 
-            note_stack[0] += 1
-            note_stack[note_stack[0]] = idx
+            note_stack.append(idx)
 
         elif ch >= "a" and ch <= "g":      # plays a to g in current octave
-            duration=60/tempo*(4/note_len)
+            duration = 60/tempo*(4/note_len)
 
-            toTranslate=ch
+            toTranslate = ch
 
-            number=""
-            ch=playstr[p]
-            if ch=="-":
-                toTranslate+="b"
-                p+=1
-            elif ch=="+" or ch=="#":
-                toTranslate+="s"
-                p+=1
+            number = ""
+            ch = playstr[p]
+            if ch == "-":
+                toTranslate += "b"
+                p += 1
+            elif ch == "+" or ch == "#":
+                toTranslate += "s"
+                p += 1
 
                 while True:
-                    ch=playstr[p]
+                    ch = playstr[p]
                     if ch.isdigit():
                         p += 1
                         number += ch
@@ -128,21 +128,20 @@ def _fbplay_internal(channel: int, playstr: str) -> str:
                 Track = (Track + write_var_len(240*next_event) +
                          chr(0x90 + channel)+chr(idx)+chr(volume))
 
-                next_event = duration*(1-note_len_mod)
+                next_event = duration * (1 - note_len_mod)
 
-                note_stack[0] += 1
-                note_stack[note_stack[0]] = idx
+                note_stack.append(idx)
 
         elif ch == "p":      # pauses for next-coming number of quarter notes
-            number=""
+            number = ""
             while True:
-                ch=playstr[p]
+                ch = playstr[p]
                 if ch.isdigit():
-                    p+=1
-                    number+=ch
+                    p += 1
+                    number += ch
                 else:
                     break
-            next_event+=60/tempo*4/int(number)
+            next_event += 60/tempo*4/int(number)
 
         # octave handling
         elif ch == ">":      # up one octave
@@ -154,75 +153,75 @@ def _fbplay_internal(channel: int, playstr: str) -> str:
                 octave -= 1
 
         elif ch == "o":      # changes octave to next-comming number
-            number=""
+            number = ""
             while True:
-                ch=playstr[p]
+                ch = playstr[p]
                 if ch.isdigit():
-                    p+=1
-                    number+=ch
+                    p += 1
+                    number += ch
                 else:
                     break
-            octave=int(number)
+            octave = int(number)
 
         # play control
         elif ch == "t":      # changes tempo (quarter notes per minute)
-            number=""
+            number = ""
             while True:
-                ch=playstr[p]
+                ch = playstr[p]
                 if ch.isdigit():
-                    p+=1
-                    number+=ch
+                    p += 1
+                    number += ch
                 else:
                     break
-            tempo=int(number)
+            tempo = int(number)
 
         elif ch == "l":  # changes note length (1=full note, 4=quarter note, 8 eigth(?) note aso)
             number = ""
             while True:
-                ch=playstr[p]
+                ch = playstr[p]
                 if ch.isdigit():
-                    p+=1
-                    number+=ch
+                    p += 1
+                    number += ch
                 else:
                     break
-            note_len=int(number)
+            note_len = int(number)
 
         elif ch == "m":  # MS makes note last 3/4, MN is 7/8 and ML sets to normal length
-            ch=playstr[p].lower()
-            p+=1
-            if ch=="s":
-                note_len_mod=3/4
-            if ch=="n":
-                note_len_mod=7/8
-            if ch=="l":
-                note_len_mod=1
+            ch = playstr[p].lower()
+            p += 1
+            if ch == "s":
+                note_len_mod = 3/4
+            if ch == "n":
+                note_len_mod = 7/8
+            if ch == "l":
+                note_len_mod = 1
 
         # new MIDI functions
         elif ch == "i":
-            number=""
+            number = ""
             while True:
-                ch=playstr[p]
+                ch = playstr[p]
                 if ch.isdigit():
-                    p+=1
-                    number+=ch
+                    p += 1
+                    number += ch
                 else:
                     break
-            Track=Track+write_var_len(0)+chr(0xc0 + channel)+chr(int(number))
+            Track = Track + write_var_len(0)+chr(0xc0 + channel)+chr(int(number))
 
         elif ch == "v":
-            number=""
+            number = ""
             while True:
-                ch=playstr[p]
+                ch = playstr[p]
                 if ch.isdigit():
-                    p+=1
-                    number+=ch
+                    p += 1
+                    number += ch
                 else:
                     break
-            volume=int(number)
+            volume = int(number)
         elif ch == "{":      # enable chords (notes play simultaneously)
-            chord=1
+            chord = 1
         elif ch == "}":      # disable chords (notes play simultaneously)
-            chord=0
+            chord = 0
 
         if chord:
             if chord == 2:
@@ -231,11 +230,10 @@ def _fbplay_internal(channel: int, playstr: str) -> str:
                 chord = 2
         else:
             # Stop current note, if still playing
-            for i in range(1, note_stack[0]):
+            for i in note_stack:
                 Track = (Track + write_var_len(240*duration*note_len_mod) +
-                         chr(0x80 + channel) + chr(note_stack[i]) + chr(0))
-                duration=0
-            note_stack[0]=0
+                         chr(0x80 + channel) + chr(i) + chr(0))
+                duration = 0
 
     return Track
 
