@@ -47,11 +47,11 @@ def _fbplay_internal(channel: int, playstr: str) -> bytes:
 
     track = b""  # : bytes
 
-    tempo = 120  # uint
-    note_len = 4  # ubyte
-    note_len_mod = 1  # double
-    octave = 4  # ubyte
-    volume = 127  # ubyte
+    tempo = 120  # : uint
+    note_len = 4  # : ubyte
+    note_len_mod = 1  # : double
+    octave = 4  # : ubyte
+    volume = 127  # : ubyte
     note_stack = []  # : ubyte
 
     chord = 0  # : ubyte
@@ -61,7 +61,7 @@ def _fbplay_internal(channel: int, playstr: str) -> bytes:
     # idx: ubyte
 
     # number: str
-    # ch:  char
+    # ch: char
     # tChar: char
 
     # toTranslate: str
@@ -97,18 +97,18 @@ def _fbplay_internal(channel: int, playstr: str) -> bytes:
 
             note_stack.append(idx)
 
-        elif ch >= "a" and ch <= "g":  # plays a to g in current octave
+        elif "a" <= ch <= "g":  # plays a to g in current octave
             duration = 60/tempo*(4/note_len)
 
-            toTranslate = ch
+            to_translate = ch
 
             number = ""
             ch = playstr[p]
             if ch == "-":
-                toTranslate += "b"
+                to_translate += "b"
                 p += 1
             elif ch == "+" or ch == "#":
-                toTranslate += "s"
+                to_translate += "s"
                 p += 1
 
                 while p < len(playstr):
@@ -123,7 +123,7 @@ def _fbplay_internal(channel: int, playstr: str) -> bytes:
                 if ch == ".":
                     duration = duration*1.5
 
-                idx = 12*octave+xlatNote[toTranslate]
+                idx = 12*octave+xlatNote[to_translate]
 
                 track = (track + write_var_len(240*next_event) +
                          bytes([0x90 + channel, idx, volume]))
@@ -224,17 +224,17 @@ def _fbplay_internal(channel: int, playstr: str) -> bytes:
         elif ch == "}":      # disable chords (notes play simultaneously)
             chord = 0
 
-            if chord:
-                if chord == 2:
-                    next_event = 0
-                else:
-                    chord = 2
-            else:
-                # Stop current note, if still playing
-                for i in note_stack:
-                    track = (track + write_var_len(240*duration*note_len_mod) +
-                             bytes([0x80 + channel, i, 0]))
-                    duration = 0
+    if chord:
+        if chord == 2:
+            next_event = 0
+        else:
+            chord = 2
+    else:
+        # Stop current note, if still playing
+        for i in note_stack:
+            track = (track + write_var_len(240*duration*note_len_mod) +
+                     bytes([0x80 + channel, i, 0]))
+            duration = 0
 
     return track
 
@@ -340,4 +340,9 @@ def play(playstr: str, playstr1: str = "", playstr2: str = "",
                      )
 
 
-play(" i48 t200l4mneel2el4eel2el4egl3cl8dl1el4ffl3fl8fl4fel2el8eel4eddel2dgl4eel2el4eel2el4egl3cl8dl1el4ffl3fl8fl4fel2el8efl4ggfdl2cl8")
+play("t130 mb ml l4 p2 o2 e. l8 d c o1 b mn a4" +
+     "a ml o2 c o1 b a g a e d mn e1" +
+     "o2 e4. ml d c o1 b mn a4 a ml o2 c o1 b a g a e d e1" +
+     "o2 mn d d d ml c o1 mn f4 f ml g o2 e4 d c o1 f4 a o2 c" +
+     "o1 b4 a mn g g4 ml a g a1"
+     )
