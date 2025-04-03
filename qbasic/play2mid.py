@@ -13,7 +13,16 @@ def write_var_len(v: int) -> bytes:
 
 
 def write_four_bytes(v: int) -> bytes:
-    return pack('<I', v)
+    # a: str
+    a = [v and 255]
+    v >>= 8
+    a.insert(0, v and 255)
+    v >>= 8
+    a.insert(0, v and 255)
+    v >>= 8
+    a.insert(0, v and 255)
+    return bytes(a)
+#    return pack('<I', v)
 
 
 xlatNote = {  # (n: str) -> ubyte:
@@ -102,7 +111,6 @@ def _fbplay_internal(channel: int, playstr: str) -> bytes:
 
             to_translate = ch
 
-            number = ""
             ch = playstr[p]
             if ch == "-":
                 to_translate += "b"
@@ -111,26 +119,27 @@ def _fbplay_internal(channel: int, playstr: str) -> bytes:
                 to_translate += "s"
                 p += 1
 
-                while p < len(playstr):
-                    ch = playstr[p]
-                    if ch.isdigit():
-                        p += 1
-                        number += ch
-                    else:
-                        break
-                if int(number) != 0:
-                    duration = duration*4/int(number)
-                if ch == ".":
-                    duration = duration*1.5
+            number = ""
+            while p < len(playstr):
+                ch = playstr[p]
+                if ch.isdigit():
+                    p += 1
+                    number += ch
+                else:
+                    break
+            if number != "" and int(number) != 0:
+                duration = duration*4/int(number)
+            if ch == ".":
+                duration = duration*1.5
 
-                idx = 12*octave+xlatNote[to_translate]
+            idx = 12*octave+xlatNote[to_translate]
 
-                track = (track + write_var_len(240*next_event) +
-                         bytes([0x90 + channel, idx, volume]))
+            track = (track + write_var_len(round(240*next_event)) +
+                     bytes([0x90 + channel, idx, volume]))
 
-                next_event = duration * (1 - note_len_mod)
+            next_event = duration * (1 - note_len_mod)
 
-                note_stack.append(idx)
+            note_stack.append(idx)
 
         elif ch == "p":  # pauses for next-coming number of quarter notes
             number = ""
@@ -224,17 +233,19 @@ def _fbplay_internal(channel: int, playstr: str) -> bytes:
         elif ch == "}":      # disable chords (notes play simultaneously)
             chord = 0
 
-    if chord:
-        if chord == 2:
-            next_event = 0
+
+        if chord:
+            if chord == 2:
+                next_event = 0
+            else:
+                chord = 2
         else:
-            chord = 2
-    else:
-        # Stop current note, if still playing
-        for i in note_stack:
-            track = (track + write_var_len(240*duration*note_len_mod) +
-                     bytes([0x80 + channel, i, 0]))
-            duration = 0
+            # Stop current note, if still playing
+            for i in note_stack:
+                track = (track + write_var_len(round(240*duration*note_len_mod)) +
+                         bytes([0x80 + channel, i, 0]))
+                duration = 0
+            note_stack = []
 
     return track
 
