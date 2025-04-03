@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from struct import pack
+# from struct import pack
 
 
 def write_var_len(v: int) -> bytes:
