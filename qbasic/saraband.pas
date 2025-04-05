@@ -17,15 +17,24 @@ const
   D = 'O3 L8MLE->CFMNE-MLB-MNA ML<D>DGMNFML>CMN<B ML>C<A-F+MNGML<BMN>C ML<G>DGMNF+ML>CMN<B';
   E = 'O5 MLE-C<F+MNGML<AMN>>E- MLL64DE-L16D.L8<A-EMNFML<BMN>G MLFE-<BMN>CML<GMN>B ML<CG>FMNE-L4ML>C';
 
-  F = 't130 mb ml l4 p2 o2 e. l8 d c o1 b mn a4';
+  F = 't130 mf ml l4 p2 o2 e. l8 d c o1 b mn a4';
   G = 'a ml o2 c o1 b a g a e d mn e1';
   H = 'o2 e4. ml d c o1 b mn a4 a ml o2 c o1 b a g a e d e1';
   I = 'o2 mn d d d ml c o1 mn f4 f ml g o2 e4 d c o1 f4 a o2 c';
   J = 'o1 b4 a mn g g4 ml a g a1';
+  K = 'o2 mn d d d ml c o1 mn f4 f ml g';
+  L = 'o2 e4 d c o1 f4 a o2 c o1 b4 a mn g g4 ml o2 c d';
+  M = 'c2 p2';
+
+'  F = 't130 mb ml l4 p2 o2 e. l8 d c o1 b mn a4';
+'  G = 'a ml o2 c o1 b a g a e d mn e1';
+'  H = 'o2 e4. ml d c o1 b mn a4 a ml o2 c o1 b a g a e d e1';
+'  I = 'o2 mn d d d ml c o1 mn f4 f ml g o2 e4 d c o1 f4 a o2 c';
+'  J = 'o1 b4 a mn g g4 ml a g a1';
 
 begin
   midiFileName := 'sarabande.mid';
 {  Play('T48' + A + B + A + B + C + D + E + C + D + E + 'P2.', '');}
-  Play(F + G + H + I + J, '');
+  Play(F + G + H + I + J + K + L + M, '');
 
 end.
