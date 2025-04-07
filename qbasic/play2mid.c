@@ -341,18 +341,19 @@ void Play(char *midiFileName, char *playstr, char *playstr1)
   memset(Midi, 0, sizeof(Midi));
   tracklen = _fbplay_internal(Track, 0, playstr);
   if (tracklen != 0) {
-    sprintf(Midi + midilen, "MTrk%s%s\377/",
+    l = sprintf(Midi + midilen, "MTrk%s%s\377/",
 	    WriteFourBytes(Track2, tracklen + 4L), Track);
+    midilen += l;
     Tracks++;
   }
   tracklen = _fbplay_internal(Track, 1, playstr1);
   if (tracklen != 0) {
-    sprintf(Midi + midilen, "MTrk%s%s\377/",
+    l = sprintf(Midi + midilen, "MTrk%s%s\377/",
 	    WriteFourBytes(Track1, tracklen + 4L), Track);
+    midilen += l;
     Tracks++;
   }
-  /* FIXME: get l! */
-  sprintf(Header, "MThd\006%c%cx",
+  l = sprintf(Header, "MThd\006%c%cx",
 	  (Tracks > 1) ? 1 : 0, (unsigned char)Tracks);
   memcpy(Midi + midilen, Header, l);
   midilen += l; 
