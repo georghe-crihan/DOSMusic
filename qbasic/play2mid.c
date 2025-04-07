@@ -94,7 +94,7 @@ static long StrToIntDef(char *s, long def)
   return result;
 }
 
-static char *_fbplay_internal(char *Result, unsigned char channel, char *playstr)
+static int _fbplay_internal(char *Result, unsigned char channel, char *playstr)
 {
   long tempo = 120;
   unsigned char note_len = 4;
@@ -108,26 +108,26 @@ static char *_fbplay_internal(char *Result, unsigned char channel, char *playstr
   char number[256];
   char ch, tch;
   char toTranslate[256];
+  int len = 0;
   int l, i = 0, p = 0;
   char STR1[256];
 
   Result[0] = '\0';
   memset(note_stack, 0, sizeof(note_stack));
   while (p < strlen(playstr)) {
-    ch = tolower(playstr[p]);
-    p++;
-    switch (ch) {
+    switch (tolower(playstr[p++])) {
     case 'n':
-      *number = '\0';
+      *number = '\0'; i = 0;
       tch = playstr[p];
       while (tch >= 48 && tch <= 57) {
-	sprintf(number + strlen(number), "%c", tch);
+	number[i++] = tch;
 	p++;
 	if (p < strlen(playstr))
 	  tch = playstr[p];
 	else
-	  tch = '\0';
+	  break;
       }
+      number[i] = '\0';
       idx = atoi(number);
       if (idx == 0)
 	next_event += 60.0 / tempo * (4.0 / note_len) / 60;
@@ -161,15 +161,16 @@ static char *_fbplay_internal(char *Result, unsigned char channel, char *playstr
 	    p++;
 	  }
 	}
-	ch = playstr[p];
+	ch = playstr[p]; i = 0;
 	while (ch >= 48 && ch <= 57) {
-	  sprintf(number + strlen(number), "%c", ch);
+	  number[i++] = ch;
 	  p++;
 	  if (p < strlen(playstr))
 	    ch = playstr[p];
 	  else
-	    ch = '\0';
+	    break;
 	}
+        number[i] = '\0';
 	if (StrToIntDef(number, 0L) != 0)
 	  duration = duration * 4 / atoi(number);
 	if (ch == '.')
@@ -183,16 +184,17 @@ static char *_fbplay_internal(char *Result, unsigned char channel, char *playstr
 	note_stack[note_stack[0]] = idx;
       break;
       case 'p':
-	  *number = '\0';
+	  *number = '\0'; i = 0;
 	  ch = playstr[p];
 	  while (ch >= 48 && ch <= 57) {
-	    sprintf(number + strlen(number), "%c", ch);
+	    number[i++] = ch;
 	    p++;
 	    if (p <= strlen(playstr))
 	      ch = playstr[p];
 	    else
-	      ch = '\0';
+	      break;
 	  }
+          number[i] = '\0';
 	  next_event += 60.0 / tempo * 4 / atoi(number);
         break;
         case '>':
@@ -200,47 +202,50 @@ static char *_fbplay_internal(char *Result, unsigned char channel, char *playstr
 	      octave++;
         break;
 	case '<':
-	      if (octave > 1)
-		octave--;
+	    if (octave > 1)
+	      octave--;
         break;
 	case 'o':
-		*number = '\0';
-		ch = playstr[p];
+             *number = '\0'; i = 0;
+	     ch = playstr[p];
 		while (ch >= 48 && ch <= 57) {
-		  sprintf(number + strlen(number), "%c", ch);
+		  number[i++] = ch;
 		  p++;
 		  if (p < strlen(playstr))
 		    ch = playstr[p];
 		  else
-		    ch = '\0';
+		    break;
 		}
-		octave = atoi(number);
+             number[i] = '\0';
+	     octave = atoi(number);
         break;
         case 't':	
 		if (ch == 't') {
-		  *number = '\0';
+		  *number = '\0'; i = 0;
 		  ch = playstr[p];
 		  while (ch >= 48 && ch <= 57) {
-		    sprintf(number + strlen(number), "%c", ch);
+		    number[i++] = ch;
 		    p++;
 		    if (p < strlen(playstr))
 		      ch = playstr[p];
 		    else
-		      ch = '\0';
+		      break;
 		  }
+                  number[i] = '\0';
 		  tempo = atoi(number);
         break;
         case 'l':
-		    *number = '\0';
+		    *number = '\0'; i = 0;
 		    ch = playstr[p];
 		    while (ch >= 48 && ch <= 57) {
-		      sprintf(number + strlen(number), "%c", ch);
+		      number[i++] = ch;
 		      p++;
 		      if (p < strlen(playstr))
 			ch = playstr[p];
 		      else
-			ch = '\0';
+			break;
 		    }
+                    number[i] = '\0';
 		    note_len = StrToIntDef(number, 1L);
         break;
         case 'm':
@@ -254,31 +259,33 @@ static char *_fbplay_internal(char *Result, unsigned char channel, char *playstr
 			note_len_mod = 1.0;
         break;
         case 'i':
-			*number = '\0';
+			*number = '\0'; i = 0;
 			ch = playstr[p];
 			while (ch >= 48 && ch <= 57) {
-			  sprintf(number + strlen(number), "%c", ch);
+			  number[i++] = ch;
 			  p++;
 			  if (p < strlen(playstr))
 			    ch = playstr[p];
 			  else
-			    ch = '\0';
+			    break;
 			}
+                        number[i] = '\0';
 			sprintf(Result + strlen(Result), "%s%c%c",
 				WriteVarLen(STR1, &l, 0L), channel + 0xc0,
 				(char)atoi(number));
         break;
         case 'v':
-			  *number = '\0';
+			  *number = '\0'; i = 0;
 			  ch = playstr[p];
 			  while (ch >= 48 && ch <= 57) {
-			    sprintf(number + strlen(number), "%c", ch);
+			    number[i++] = ch;
 			    p++;
 			    if (p < strlen(playstr))
 			      ch = playstr[p];
 			    else
-			      ch = '\0';
+			      break;
 			  }
+                          number[i] = '\0';
 			  volume = atoi(number);
 	break;
 	case '{':
@@ -301,60 +308,39 @@ static char *_fbplay_internal(char *Result, unsigned char channel, char *playstr
 	sprintf(Result + strlen(Result), "%s%c%c",
 	  WriteVarLen(STR1, &l, (unsigned long)floor(240 * duration * note_len_mod + 0.5)),
 	  channel + 0x80, note_stack[i]);
-/* p2c: /Users/mac/Sandbox/DOSMusic/qbasic/play2mid.pas, line 314:
- * Note: Null character at end of sprintf control string [148] */
 	duration = 0.0;
       }
       note_stack[0] = 0;
     }
   }
-  return Result;
+  return len;
 }
 
 
 void Play(char *midiFileName, char *playstr, char *playstr1)
 {
   long Tracks = 0;
+  int tracklen = 0, midilen = 0;
   unsigned char Midi[256], Track[256];
   FILE *F = NULL;
   unsigned char STR1[256], STR2[256];
 
-  *Midi = '\0';
-  _fbplay_internal(Track, 0, playstr);
-  if (*Track != '\0') {
-    sprintf(Midi + strlen(Midi), "MTrk%s%s\377/",
-	    WriteFourBytes(STR2, strlen(Track) + 4L), Track);
-/* p2c: /Users/mac/Sandbox/DOSMusic/qbasic/play2mid.pas, line 333:
- * Note: Null character at end of sprintf control string [148] */
-/* p2c: /Users/mac/Sandbox/DOSMusic/qbasic/play2mid.pas, line 333:
- * Note: Null character at end of sprintf control string [148] */
+  memset(Midi, 0, sizeof(Midi));
+  tracklen = _fbplay_internal(Track, 0, playstr);
+  if (tracklen != 0) {
+    sprintf(Midi + midilen, "MTrk%s%s\377/",
+	    WriteFourBytes(STR2, tracklen + 4L), Track);
     Tracks++;
   }
-  _fbplay_internal(Track, 1, playstr1);
-  if (*Track != '\0') {
-    sprintf(Midi + strlen(Midi), "MTrk%s%s\377/",
-	    WriteFourBytes(STR1, strlen(Track) + 4L), Track);
-/* p2c: /Users/mac/Sandbox/DOSMusic/qbasic/play2mid.pas, line 339:
- * Note: Null character at end of sprintf control string [148] */
-/* p2c: /Users/mac/Sandbox/DOSMusic/qbasic/play2mid.pas, line 339:
- * Note: Null character at end of sprintf control string [148] */
+  tracklen = _fbplay_internal(Track, 1, playstr1);
+  if (tracklen != 0) {
+    sprintf(Midi + midilen, "MTrk%s%s\377/",
+	    WriteFourBytes(STR1, tracklen + 4L), Track);
     Tracks++;
   }
   sprintf(Midi, "MThd\006%c%cx%s",
-	  (Tracks > 1) ? 1 : 0, (unsigned char)Tracks, strcpy(STR1, Midi));
-/* p2c: /Users/mac/Sandbox/DOSMusic/qbasic/play2mid.pas, line 342:
- * Note: Null character in sprintf control string [147] */
-/* p2c: /Users/mac/Sandbox/DOSMusic/qbasic/play2mid.pas, line 342:
- * Note: Null character in sprintf control string [147] */
-/* p2c: /Users/mac/Sandbox/DOSMusic/qbasic/play2mid.pas, line 342:
- * Note: Null character in sprintf control string [147] */
-/* p2c: /Users/mac/Sandbox/DOSMusic/qbasic/play2mid.pas, line 342:
- * Note: Null character at end of sprintf control string [148] */
-/* p2c: /Users/mac/Sandbox/DOSMusic/qbasic/play2mid.pas, line 342:
- * Note: Null character at end of sprintf control string [148] */
-/* p2c: /Users/mac/Sandbox/DOSMusic/qbasic/play2mid.pas, line 343:
- * Note: Null character at end of sprintf control string [148] */
+	  (Tracks > 1) ? 1 : 0, (unsigned char)Tracks, memcpy(STR1, Midi, midilen));
   F = fopen(midiFileName, "wb");
-  Tracks = fwrite(Midi, 1, strlen(Midi), F);
+  Tracks = fwrite(Midi, 1, midilen, F);
   fclose(F);
 }
