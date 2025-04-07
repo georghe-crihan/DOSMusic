@@ -111,7 +111,7 @@ static int _fbplay_internal(unsigned char *Result, unsigned char channel, char *
   char ch, tch;
   char toTranslate[256];
   int len = 0;
-  int l, i = 0, p = 0;
+  int l = 0, i = 0, p = 0;
   unsigned char STR1[256];
 
   Result[0] = '\0';
@@ -122,7 +122,7 @@ static int _fbplay_internal(unsigned char *Result, unsigned char channel, char *
     case 'n':
       *number = '\0'; i = 0;
       tch = playstr[p];
-      while (tch >= 48 && tch <= 57) {
+      while (isdigit(tch)) {
 	number[i++] = tch;
 	p++;
 	if (p < strlen(playstr))
@@ -168,7 +168,7 @@ static int _fbplay_internal(unsigned char *Result, unsigned char channel, char *
 	  }
 	}
 	ch = playstr[p]; i = 0;
-	while (ch >= 48 && ch <= 57) {
+	while (isdigit(ch)) {
 	  number[i++] = ch;
 	  p++;
 	  if (p < strlen(playstr))
@@ -195,7 +195,7 @@ static int _fbplay_internal(unsigned char *Result, unsigned char channel, char *
       case 'p':
 	  *number = '\0'; i = 0;
 	  ch = playstr[p];
-	  while (ch >= 48 && ch <= 57) {
+	  while (isdigit(ch)) {
 	    number[i++] = ch;
 	    p++;
 	    if (p <= strlen(playstr))
@@ -217,7 +217,7 @@ static int _fbplay_internal(unsigned char *Result, unsigned char channel, char *
 	case 'o':
              *number = '\0'; i = 0;
 	     ch = playstr[p];
-		while (ch >= 48 && ch <= 57) {
+		while (isdigit(ch)) {
 		  number[i++] = ch;
 		  p++;
 		  if (p < strlen(playstr))
@@ -232,7 +232,7 @@ static int _fbplay_internal(unsigned char *Result, unsigned char channel, char *
 		if (ch == 't') {
 		  *number = '\0'; i = 0;
 		  ch = playstr[p];
-		  while (ch >= 48 && ch <= 57) {
+		  while (isdigit(ch)) {
 		    number[i++] = ch;
 		    p++;
 		    if (p < strlen(playstr))
@@ -246,7 +246,7 @@ static int _fbplay_internal(unsigned char *Result, unsigned char channel, char *
         case 'l':
 		    *number = '\0'; i = 0;
 		    ch = playstr[p];
-		    while (ch >= 48 && ch <= 57) {
+		    while (isdigit(ch)) {
 		      number[i++] = ch;
 		      p++;
 		      if (p < strlen(playstr))
@@ -270,7 +270,7 @@ static int _fbplay_internal(unsigned char *Result, unsigned char channel, char *
         case 'i':
 			*number = '\0'; i = 0;
 			ch = playstr[p];
-			while (ch >= 48 && ch <= 57) {
+			while (isdigit(ch)) {
 			  number[i++] = ch;
 			  p++;
 			  if (p < strlen(playstr))
@@ -287,7 +287,7 @@ static int _fbplay_internal(unsigned char *Result, unsigned char channel, char *
         case 'v':
 			  *number = '\0'; i = 0;
 			  ch = playstr[p];
-			  while (ch >= 48 && ch <= 57) {
+			  while (isdigit(ch)) {
 			    number[i++] = ch;
 			    p++;
 			    if (p < strlen(playstr))
@@ -317,6 +317,7 @@ static int _fbplay_internal(unsigned char *Result, unsigned char channel, char *
       for (i = 1; i <= note_stack[0]; i++) {
         memcpy(Result + len, 
 	  WriteVarLen(STR1, &l, (unsigned long)floor(240 * duration * note_len_mod + 0.5)), l);
+        len += l;
 	Result[len++] = channel + 0x80;
         Result[len++] = note_stack[i];
 	duration = 0.0;
