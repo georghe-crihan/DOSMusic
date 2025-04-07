@@ -12,10 +12,10 @@ static unsigned char *WriteVarLen(unsigned char *Result, int *len, unsigned long
 {
   *len = 0;
 
-  Result[*len++] = (unsigned char)(Value & 0x7f);
+  Result[(*len)++] = (unsigned char)(Value & 0x7f);
   while (Value > 0x7f) {
     Value >>= 7;
-    Result[*len++] = (unsigned char)((Value & 0x7f) | 0x80);
+    Result[(*len)++] = (unsigned char)((Value & 0x7f) | 0x80);
   }
   return Result;
 }
@@ -52,46 +52,34 @@ static unsigned char _fbplay_internal_translateNote(char *toTranslate)
       !strcmp(toTranslate, "eb"))
     return 3;
 
-  if (!strcmp(toTranslate, "e"))
+  if (!strcmp(toTranslate, "e") ||
+      !strcmp(toTranslate, "fb"))
     return 4;
 
-  if (!strcmp(toTranslate, "fb"))
-    return 4;
-
-  if (!strcmp(toTranslate, "f"))
+  if (!strcmp(toTranslate, "f") ||
+      !strcmp(toTranslate, "es"))
     return 5;
 
-  if (!strcmp(toTranslate, "es"))
-    return 5;
-
-  if (!strcmp(toTranslate, "fs"))
-    return 6;
-
-  if (!strcmp(toTranslate, "gb"))
+  if (!strcmp(toTranslate, "fs") ||
+      !strcmp(toTranslate, "gb"))
     return 6;
 
   if (!strcmp(toTranslate, "g"))
     return 7;
 
-  if (!strcmp(toTranslate, "gs"))
-    return 8;
-
-  if (!strcmp(toTranslate, "ab"))
+  if (!strcmp(toTranslate, "gs") ||
+      !strcmp(toTranslate, "ab"))
     return 8;
 
   if (!strcmp(toTranslate, "a"))
     return 9;
 
-  if (!strcmp(toTranslate, "as"))
+  if (!strcmp(toTranslate, "as") ||
+      !strcmp(toTranslate, "bb"))
     return 10;
 
-  if (!strcmp(toTranslate, "bb"))
-    return 10;
-
-  if (!strcmp(toTranslate, "b"))
-    return 11;
-
-  if (!strcmp(toTranslate, "cb"))
+  if (!strcmp(toTranslate, "b") ||
+      !strcmp(toTranslate, "cb"))
     return 11;
 }
 
@@ -108,7 +96,6 @@ static long StrToIntDef(char *s, long def)
 
 static char *_fbplay_internal(char *Result, unsigned char channel, char *playstr)
 {
-  char result[256];
   long tempo = 120;
   unsigned char note_len = 4;
   double note_len_mod = 1.0;
@@ -121,12 +108,11 @@ static char *_fbplay_internal(char *Result, unsigned char channel, char *playstr
   char number[256];
   char ch, tch;
   char toTranslate[256];
-  int l, i, p = 0;
+  int l, i = 0, p = 0;
   char STR1[256];
 
-  *result = '\0';
-  for (i = 0; i <= 128; i++)
-    note_stack[i] = 0;
+  Result[0] = '\0';
+  memset(note_stack, 0, sizeof(note_stack));
   while (p < strlen(playstr)) {
     ch = tolower(playstr[p]);
     p++;
@@ -147,7 +133,7 @@ static char *_fbplay_internal(char *Result, unsigned char channel, char *playstr
 	next_event += 60.0 / tempo * (4.0 / note_len) / 60;
       else {
 	duration = 60.0 / tempo * (4.0 / note_len);
-	sprintf(result + strlen(result), "%s%c%c%c",
+	sprintf(Result + strlen(Result), "%s%c%c%c",
 		WriteVarLen(STR1, &l, (long)floor(240 * next_event + 0.5)),
 		channel + 0x90, idx, volume);
 	next_event = duration * (1 - note_len_mod);
@@ -189,7 +175,7 @@ static char *_fbplay_internal(char *Result, unsigned char channel, char *playstr
 	if (ch == '.')
 	  duration *= 1.5;
 	idx = octave * 12 + _fbplay_internal_translateNote(toTranslate);
-	sprintf(result + strlen(result), "%s%c%c%c",
+	sprintf(Result + strlen(Result), "%s%c%c%c",
 		WriteVarLen(STR1, &l, (unsigned long)floor(240 * next_event + 0.5)),
 		channel + 0x90, idx, volume);
 	next_event = duration * (1 - note_len_mod);
@@ -278,7 +264,7 @@ static char *_fbplay_internal(char *Result, unsigned char channel, char *playstr
 			  else
 			    ch = '\0';
 			}
-			sprintf(result + strlen(result), "%s%c%c",
+			sprintf(Result + strlen(Result), "%s%c%c",
 				WriteVarLen(STR1, &l, 0L), channel + 0xc0,
 				(char)atoi(number));
         break;
@@ -312,7 +298,7 @@ static char *_fbplay_internal(char *Result, unsigned char channel, char *playstr
 	chord = 2;
     } else {
       for (i = 1; i <= note_stack[0]; i++) {
-	sprintf(result + strlen(result), "%s%c%c",
+	sprintf(Result + strlen(Result), "%s%c%c",
 	  WriteVarLen(STR1, &l, (unsigned long)floor(240 * duration * note_len_mod + 0.5)),
 	  channel + 0x80, note_stack[i]);
 /* p2c: /Users/mac/Sandbox/DOSMusic/qbasic/play2mid.pas, line 314:
