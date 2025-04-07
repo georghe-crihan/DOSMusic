@@ -81,6 +81,8 @@ static unsigned char _fbplay_internal_translateNote(char *toTranslate)
   if (!strcmp(toTranslate, "b") ||
       !strcmp(toTranslate, "cb"))
     return 11;
+
+  return 0;
 }
 
 static long StrToIntDef(char *s, long def)
@@ -94,7 +96,7 @@ static long StrToIntDef(char *s, long def)
   return result;
 }
 
-static int _fbplay_internal(char *Result, unsigned char channel, char *playstr)
+static int _fbplay_internal(unsigned char *Result, unsigned char channel, char *playstr)
 {
   long tempo = 120;
   unsigned char note_len = 4;
@@ -110,12 +112,13 @@ static int _fbplay_internal(char *Result, unsigned char channel, char *playstr)
   char toTranslate[256];
   int len = 0;
   int l, i = 0, p = 0;
-  char STR1[256];
+  unsigned char STR1[256];
 
   Result[0] = '\0';
   memset(note_stack, 0, sizeof(note_stack));
   while (p < strlen(playstr)) {
-    switch (tolower(playstr[p++])) {
+    ch = tolower(playstr[p++]);
+    switch (ch) {
     case 'n':
       *number = '\0'; i = 0;
       tch = playstr[p];
@@ -133,9 +136,12 @@ static int _fbplay_internal(char *Result, unsigned char channel, char *playstr)
 	next_event += 60.0 / tempo * (4.0 / note_len) / 60;
       else {
 	duration = 60.0 / tempo * (4.0 / note_len);
-	sprintf(Result + strlen(Result), "%s%c%c%c",
-		WriteVarLen(STR1, &l, (long)floor(240 * next_event + 0.5)),
-		channel + 0x90, idx, volume);
+        memcpy(Result + len, 
+		WriteVarLen(STR1, &l, (long)floor(240 * next_event + 0.5)), l);
+        len += l;
+        Result[len++] = channel + 0x90;
+        Result[len++] = idx;
+        Result[len++] = volume;
 	next_event = duration * (1 - note_len_mod);
 	note_stack[0]++;
 	note_stack[note_stack[0]] = idx;
@@ -149,7 +155,7 @@ static int _fbplay_internal(char *Result, unsigned char channel, char *playstr)
     case 'f':
     case 'g':
 	duration = 60.0 / tempo * (4.0 / note_len);
-	sprintf(toTranslate, "%c", ch);
+	toTranslate[0] = ch; toTranslate[1] = '\0';
 	*number = '\0';
 	ch = playstr[p];
 	if (ch == '-') {
@@ -176,9 +182,12 @@ static int _fbplay_internal(char *Result, unsigned char channel, char *playstr)
 	if (ch == '.')
 	  duration *= 1.5;
 	idx = octave * 12 + _fbplay_internal_translateNote(toTranslate);
-	sprintf(Result + strlen(Result), "%s%c%c%c",
-		WriteVarLen(STR1, &l, (unsigned long)floor(240 * next_event + 0.5)),
-		channel + 0x90, idx, volume);
+        memcpy(Result + len, 
+		WriteVarLen(STR1, &l, (unsigned long)floor(240 * next_event + 0.5)), l);
+        len += l;
+	Result[len++] = channel + 0x90;
+        Result[len++] = idx;
+        Result[len++] = volume;
 	next_event = duration * (1 - note_len_mod);
 	note_stack[0]++;
 	note_stack[note_stack[0]] = idx;
@@ -270,9 +279,10 @@ static int _fbplay_internal(char *Result, unsigned char channel, char *playstr)
 			    break;
 			}
                         number[i] = '\0';
-			sprintf(Result + strlen(Result), "%s%c%c",
-				WriteVarLen(STR1, &l, 0L), channel + 0xc0,
-				(char)atoi(number));
+			memcpy(Result + len, 
+				WriteVarLen(STR1, &l, 0L), l);
+                        Result[len++] = channel + 0xc0;
+			Result[len++] = (char)atoi(number);
         break;
         case 'v':
 			  *number = '\0'; i = 0;
@@ -305,9 +315,10 @@ static int _fbplay_internal(char *Result, unsigned char channel, char *playstr)
 	chord = 2;
     } else {
       for (i = 1; i <= note_stack[0]; i++) {
-	sprintf(Result + strlen(Result), "%s%c%c",
-	  WriteVarLen(STR1, &l, (unsigned long)floor(240 * duration * note_len_mod + 0.5)),
-	  channel + 0x80, note_stack[i]);
+        memcpy(Result + len, 
+	  WriteVarLen(STR1, &l, (unsigned long)floor(240 * duration * note_len_mod + 0.5)), l);
+	Result[len++] = channel + 0x80;
+        Result[len++] = note_stack[i];
 	duration = 0.0;
       }
       note_stack[0] = 0;
@@ -321,25 +332,30 @@ void Play(char *midiFileName, char *playstr, char *playstr1)
 {
   long Tracks = 0;
   int tracklen = 0, midilen = 0;
+  int l = 0;
   unsigned char Midi[256], Track[256];
   FILE *F = NULL;
-  unsigned char STR1[256], STR2[256];
+  unsigned char Track1[256], Track2[256];
+  char Header[256];
 
   memset(Midi, 0, sizeof(Midi));
   tracklen = _fbplay_internal(Track, 0, playstr);
   if (tracklen != 0) {
     sprintf(Midi + midilen, "MTrk%s%s\377/",
-	    WriteFourBytes(STR2, tracklen + 4L), Track);
+	    WriteFourBytes(Track2, tracklen + 4L), Track);
     Tracks++;
   }
   tracklen = _fbplay_internal(Track, 1, playstr1);
   if (tracklen != 0) {
     sprintf(Midi + midilen, "MTrk%s%s\377/",
-	    WriteFourBytes(STR1, tracklen + 4L), Track);
+	    WriteFourBytes(Track1, tracklen + 4L), Track);
     Tracks++;
   }
-  sprintf(Midi, "MThd\006%c%cx%s",
-	  (Tracks > 1) ? 1 : 0, (unsigned char)Tracks, memcpy(STR1, Midi, midilen));
+  /* FIXME: get l! */
+  sprintf(Header, "MThd\006%c%cx",
+	  (Tracks > 1) ? 1 : 0, (unsigned char)Tracks);
+  memcpy(Midi + midilen, Header, l);
+  midilen += l; 
   F = fopen(midiFileName, "wb");
   Tracks = fwrite(Midi, 1, midilen, F);
   fclose(F);
