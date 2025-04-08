@@ -265,6 +265,7 @@ static int _fbplay_internal(unsigned char *Result, unsigned char channel, char *
                         number[i] = '\0';
 			memcpy(Result + len, 
 				WriteVarLen(buf, &l, 0L), l);
+                        len += l;
                         Result[len++] = channel + 0xc0;
 			Result[len++] = (char)atoi(number);
         break;
@@ -326,7 +327,7 @@ void Play(char *midiFileName, char *playstr, char *playstr1)
     unsigned long len;
   } miditrack;
 
-  miditrack.sig = 'krtM'; /* Mtrk */
+  miditrack.sig = 'krTM'; /* MTrk */
   memset(Midi, 0, sizeof(Midi));
   tracklen = _fbplay_internal(Track, 0, playstr);
   if (tracklen != 0) {
