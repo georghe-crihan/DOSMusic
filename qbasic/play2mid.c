@@ -4,7 +4,9 @@
 #include <math.h> /* floor(); */
 #include <ctype.h>
 
-/* https://www.freebasic.net/forum/viewtopic.php?p=248014#p248014 */
+/* https://www.freebasic.net/forum/viewtopic.php?p=248014#p248014
+ * https://www.developpez.net/forums/d2109212/autres-langages/pascal/free-pascal/production-d-fichier-midi-partir-d-chaine-caracteres-facon-qbasic/#post11719421
+ */
 
 static unsigned char *WriteVarLen(unsigned char *Result, int *len, unsigned long Value)
 {
@@ -348,10 +350,11 @@ void Play(char *midiFileName, char *playstr, char *playstr1)
     midilen += 4;
     Tracks++;
   }
-  l = sprintf(Header, "MThd\006%c%cx",
-	  (Tracks > 1) ? 1 : 0, (unsigned char)Tracks);
+  memcpy(Header, "MThd\0\0\0\6\0\0\0\0\0\x78", 14);
+  Header[9]= (Tracks > 1) ? 1 : 0;
+  Header[11] = (unsigned char)(Tracks);
   F = fopen(midiFileName, "wb");
-  fwrite(Header, 1, l, F);
+  fwrite(Header, 1, 14, F);
   fwrite(Midi, 1, midilen, F);
   fclose(F);
 }
