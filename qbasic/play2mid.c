@@ -96,7 +96,7 @@ static int _fbplay_internal(unsigned char *Result, unsigned char channel, char *
   char toTranslate[256];
   int len = 0;
   int l = 0, i = 0, p = 0;
-  unsigned char buf[256];
+  unsigned char buf[64];
 
   Result[0] = '\0';
   memset(note_stack, 0, sizeof(note_stack));
@@ -319,7 +319,7 @@ void Play(char *midiFileName, char *playstr, char *playstr1)
   long Tracks = 0;
   int tracklen = 0, midilen = 0;
   int l = 0;
-  unsigned char Midi[4096], Track[256];
+  unsigned char Midi[4096], Track[4096];
   FILE *F = NULL;
   char Header[32];
   struct __attribute__((packed)) {
