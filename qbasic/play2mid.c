@@ -6,8 +6,6 @@
 
 /* https://www.freebasic.net/forum/viewtopic.php?p=248014#p248014 */
 
-/* FIXME: Binary Midi & Track are not C strings and should have a length! */
-
 static unsigned char *WriteVarLen(unsigned char *Result, int *len, unsigned long Value)
 {
   *len = 0;
@@ -20,23 +18,7 @@ static unsigned char *WriteVarLen(unsigned char *Result, int *len, unsigned long
   return Result;
 }
 
-
-static unsigned char *WriteFourBytes(unsigned char *Result, unsigned long Value)
-{
-  int i = 0;
-
-  Result[i++] = (unsigned char)(Value & 0xff);
-  Value >>= 8;
-  Result[i++] = (unsigned char)(Value & 0xff);
-  Value >>= 8;
-  Result[i++] = (unsigned char)(Value & 0xff);
-  Value >>= 8;
-  Result[i++] = (unsigned char)(Value & 0xff);
-  return Result;
-}
-
-
-static unsigned char _fbplay_internal_translateNote(char *toTranslate)
+static unsigned char translateNote(char *toTranslate)
 {
   if (!strcmp(toTranslate, "c"))
     return 0;
@@ -112,7 +94,7 @@ static int _fbplay_internal(unsigned char *Result, unsigned char channel, char *
   char toTranslate[256];
   int len = 0;
   int l = 0, i = 0, p = 0;
-  unsigned char STR1[256];
+  unsigned char buf[256];
 
   Result[0] = '\0';
   memset(note_stack, 0, sizeof(note_stack));
@@ -137,7 +119,7 @@ static int _fbplay_internal(unsigned char *Result, unsigned char channel, char *
       else {
 	duration = 60.0 / tempo * (4.0 / note_len);
         memcpy(Result + len, 
-		WriteVarLen(STR1, &l, (long)floor(240 * next_event + 0.5)), l);
+		WriteVarLen(buf, &l, (long)floor(240 * next_event + 0.5)), l);
         len += l;
         Result[len++] = channel + 0x90;
         Result[len++] = idx;
@@ -181,9 +163,9 @@ static int _fbplay_internal(unsigned char *Result, unsigned char channel, char *
 	  duration = duration * 4 / atoi(number);
 	if (ch == '.')
 	  duration *= 1.5;
-	idx = octave * 12 + _fbplay_internal_translateNote(toTranslate);
+	idx = octave * 12 + translateNote(toTranslate);
         memcpy(Result + len, 
-		WriteVarLen(STR1, &l, (unsigned long)floor(240 * next_event + 0.5)), l);
+		WriteVarLen(buf, &l, (unsigned long)floor(240 * next_event + 0.5)), l);
         len += l;
 	Result[len++] = channel + 0x90;
         Result[len++] = idx;
@@ -280,7 +262,7 @@ static int _fbplay_internal(unsigned char *Result, unsigned char channel, char *
 			}
                         number[i] = '\0';
 			memcpy(Result + len, 
-				WriteVarLen(STR1, &l, 0L), l);
+				WriteVarLen(buf, &l, 0L), l);
                         Result[len++] = channel + 0xc0;
 			Result[len++] = (char)atoi(number);
         break;
@@ -316,7 +298,7 @@ static int _fbplay_internal(unsigned char *Result, unsigned char channel, char *
     } else {
       for (i = 1; i <= note_stack[0]; i++) {
         memcpy(Result + len, 
-	  WriteVarLen(STR1, &l, (unsigned long)floor(240 * duration * note_len_mod + 0.5)), l);
+	  WriteVarLen(buf, &l, (unsigned long)floor(240 * duration * note_len_mod + 0.5)), l);
         len += l;
 	Result[len++] = channel + 0x80;
         Result[len++] = note_stack[i];
@@ -334,31 +316,42 @@ void Play(char *midiFileName, char *playstr, char *playstr1)
   long Tracks = 0;
   int tracklen = 0, midilen = 0;
   int l = 0;
-  unsigned char Midi[256], Track[256];
+  unsigned char Midi[4096], Track[256];
   FILE *F = NULL;
-  unsigned char Track1[256], Track2[256];
-  char Header[256];
+  char Header[32];
+  struct __attribute__((packed)) {
+    unsigned long sig;
+    unsigned long len;
+  } miditrack;
 
+  miditrack.sig = 'krtM'; /* Mtrk */
   memset(Midi, 0, sizeof(Midi));
   tracklen = _fbplay_internal(Track, 0, playstr);
   if (tracklen != 0) {
-    l = sprintf(Midi + midilen, "MTrk%s%s\377/",
-	    WriteFourBytes(Track2, tracklen + 4L), Track);
-    midilen += l;
+    miditrack.len = tracklen+4;
+    memcpy(Midi + midilen, &miditrack, sizeof(miditrack));
+    midilen += sizeof(miditrack);
+    memcpy(Midi + midilen, Track, tracklen);
+    midilen += tracklen;
+    memcpy(Midi + midilen, "\0\xff\x2f\0", 4);
+    midilen += 4;
     Tracks++;
   }
   tracklen = _fbplay_internal(Track, 1, playstr1);
   if (tracklen != 0) {
-    l = sprintf(Midi + midilen, "MTrk%s%s\377/",
-	    WriteFourBytes(Track1, tracklen + 4L), Track);
-    midilen += l;
+    miditrack.len = tracklen+4;
+    memcpy(Midi + midilen, &miditrack, sizeof(miditrack));
+    midilen += sizeof(miditrack);
+    memcpy(Midi + midilen, Track, tracklen);
+    midilen += tracklen;
+    memcpy(Midi + midilen, "\0\xff\x2f\0", 4);
+    midilen += 4;
     Tracks++;
   }
   l = sprintf(Header, "MThd\006%c%cx",
 	  (Tracks > 1) ? 1 : 0, (unsigned char)Tracks);
-  memcpy(Midi + midilen, Header, l);
-  midilen += l; 
   F = fopen(midiFileName, "wb");
-  Tracks = fwrite(Midi, 1, midilen, F);
+  fwrite(Header, 1, l, F);
+  fwrite(Midi, 1, midilen, F);
   fclose(F);
 }
